@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"path"
+	"path/filepath"
 	"runtime"
 
 	"fyne.io/fyne/v2"
@@ -52,16 +52,16 @@ func listenToServerEvents(eventch chan TnfsEvent) {
 func locateTnfsdExecutable() error {
 	dir := "."
 	exeName := "tnfsd"
-
-	currentExePath, _ := os.Executable()
-	if currentExePath != "" {
-		dir = path.Dir(currentExePath)
-	}
 	if runtime.GOOS == "windows" {
 		exeName = "tnfsd.exe"
 	}
 
-	exePath = path.Join(dir, exeName)
+	currentExePath, _ := os.Executable()
+	if currentExePath != "" {
+		dir = filepath.Dir(currentExePath)
+	}
+
+	exePath = filepath.Join(dir, exeName)
 	_, err := exec.LookPath(exePath)
 	if err != nil {
 		fmt.Println(err)
@@ -201,15 +201,21 @@ This should work but is untested.
 
 func makeMainWindow(ui *TnfsUi) fyne.Window {
 	a := fyne.CurrentApp()
-	w := a.NewWindow("TNFS Server")
+	w := a.NewWindow("TNFS Server - PRE-RELEASE VERSION")
 	w.Resize(fyne.NewSize(420, 280))
 	w.SetFixedSize(true)
 
+	notice := widget.NewLabel("PRE-RELEASE VERSION - DO NOT DISTRIBUTE")
+	notice.Importance = widget.DangerImportance
+
 	w.SetContent(
-		container.NewAppTabs(
-			container.NewTabItem("Server", ui.server),
-			container.NewTabItem("Log", ui.logs),
-			container.NewTabItem("Info", ui.info),
+		container.NewVBox(
+			notice,
+			container.NewAppTabs(
+				container.NewTabItem("Server", ui.server),
+				container.NewTabItem("Log", ui.logs),
+				container.NewTabItem("Info", ui.info),
+			),
 		),
 	)
 
@@ -218,7 +224,7 @@ func makeMainWindow(ui *TnfsUi) fyne.Window {
 
 func showExeNotFound() {
 	a := fyne.CurrentApp()
-	w := a.NewWindow("TNFS Server")
+	w := a.NewWindow("TNFS Server - PRERELEASE VERSION")
 	w.Resize(fyne.NewSize(420, 140))
 	w.SetFixedSize(true)
 	button := widget.NewButton("Close", func() {
