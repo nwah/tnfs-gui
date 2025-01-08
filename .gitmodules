@@ -1,0 +1,3 @@
+[submodule "tnfsd"]
+	path = tnfsd
+	url = http://github.com/fujiNetWIFI/tnfsd
