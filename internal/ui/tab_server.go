@@ -27,7 +27,7 @@ func makeServerTab(ui *UI, server *tnfs.Server) *fyne.Container {
 		if err != nil && err != dialog.ErrCancelled {
 			currentDirLabel.SetText(err.Error())
 		} else {
-			ui.cfg.UpdateRootPath(directory)
+			ui.cfg.SetRootPath(directory)
 			currentDirLabel.SetText(directory)
 		}
 	})

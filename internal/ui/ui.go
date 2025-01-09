@@ -11,9 +11,11 @@ import (
 
 type UI struct {
 	MainWindow fyne.Window
+	SystemMenu *fyne.Menu
 	ServerTab  *fyne.Container
 	InfoTab    *fyne.Container
 	LogsTab    *fyne.Container
+	OptionsTab *fyne.Container
 
 	subscribers map[tnfs.EventType][]func(tnfs.Event)
 	cfg         *config.Config
@@ -47,7 +49,9 @@ func NewUI(cfg *config.Config, server *tnfs.Server, ch chan tnfs.Event) *UI {
 	ui.ServerTab = makeServerTab(ui, server)
 	ui.LogsTab = makeLogsTab(ui)
 	ui.InfoTab = makeInfoTab()
+	ui.OptionsTab = makeOptionsTab(ui)
 	ui.MainWindow = makeMainWindow(ui)
+	ui.SystemMenu = makeSystemMenu(ui, server)
 
 	ui.Listen(ch)
 
@@ -66,9 +70,19 @@ func makeMainWindow(ui *UI) fyne.Window {
 				container.NewTabItem("Server", ui.ServerTab),
 				container.NewTabItem("Log", ui.LogsTab),
 				container.NewTabItem("Info", ui.InfoTab),
+				container.NewTabItem("Options", ui.OptionsTab),
 			),
 		),
 	)
+
+	w.SetCloseIntercept(func() {
+		if ui.cfg.AllowBackground {
+			w.Hide()
+		} else {
+			w.Close()
+			a.Quit()
+		}
+	})
 
 	return w
 }

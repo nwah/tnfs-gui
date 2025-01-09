@@ -12,20 +12,32 @@ import (
 )
 
 const (
-	TNFS_ROOT_PATH_KEY = "tnfsRootPath"
+	TNFS_ROOT_PATH_KEY   = "tnfsRootPath"
+	ALLOW_BACKGROUND_KEY = "allowBackground"
+	START_AT_LOGIN_KEY   = "startAtLogin"
 )
 
 type Config struct {
-	ExePath      string
-	TnfsRootPath string
-	Hostname     string
+	ExePath         string
+	TnfsRootPath    string
+	Hostname        string
+	AllowBackground bool
+	StartAtLogin    bool
 }
 
-func (c *Config) UpdateRootPath(newPath string) {
-	a := fyne.CurrentApp()
+func (c *Config) SetRootPath(newPath string) {
 	c.TnfsRootPath = newPath
-	a.Preferences().SetString(TNFS_ROOT_PATH_KEY, newPath)
+	fyne.CurrentApp().Preferences().SetString(TNFS_ROOT_PATH_KEY, newPath)
+}
 
+func (c *Config) SetAllowBackground(newVal bool) {
+	c.AllowBackground = newVal
+	fyne.CurrentApp().Preferences().SetBool(ALLOW_BACKGROUND_KEY, newVal)
+}
+
+func (c *Config) SetStartAtLogin(newVal bool) {
+	c.StartAtLogin = newVal
+	fyne.CurrentApp().Preferences().SetBool(START_AT_LOGIN_KEY, newVal)
 }
 
 func LoadConfig() (*Config, error) {
@@ -33,10 +45,14 @@ func LoadConfig() (*Config, error) {
 	if err != nil {
 		return &Config{}, err
 	}
+
+	prefs := fyne.CurrentApp().Preferences()
 	cfg := &Config{
-		ExePath:      exePath,
-		TnfsRootPath: loadDefaultRootPath(),
-		Hostname:     getHostnameOrIP(),
+		ExePath:         exePath,
+		Hostname:        getHostnameOrIP(),
+		TnfsRootPath:    getRootPath(prefs),
+		AllowBackground: prefs.BoolWithFallback(ALLOW_BACKGROUND_KEY, false),
+		StartAtLogin:    prefs.BoolWithFallback(START_AT_LOGIN_KEY, false),
 	}
 	return cfg, nil
 }
@@ -73,6 +89,7 @@ func locateTnfsdExecutable() (string, error) {
 	}
 
 	exePath := filepath.Join(dir, exeName)
+	exePath = "bin/tnfsd-bsd"
 
 	fmt.Println(currentExePath)
 	fmt.Println(exePath)
@@ -85,11 +102,10 @@ func locateTnfsdExecutable() (string, error) {
 	return exePath, nil
 }
 
-func loadDefaultRootPath() string {
+func getRootPath(prefs fyne.Preferences) string {
 	dirname, err := os.UserHomeDir()
 	if err != nil {
 		dirname = "."
 	}
-	prefs := fyne.CurrentApp().Preferences()
 	return prefs.StringWithFallback(TNFS_ROOT_PATH_KEY, dirname)
 }

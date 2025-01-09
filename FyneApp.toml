@@ -5,4 +5,4 @@ Website = "https://fujinet.online"
   Name = "TNFS Server Manager"
   ID = "org.fujinet.tnfs-ui"
   Version = "0.0.2"
-  Build = 21
+  Build = 23
