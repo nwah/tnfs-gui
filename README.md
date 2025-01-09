@@ -8,11 +8,11 @@ _Available or Windows, Mac, and Linux*_
 ## Installation
 
 ### Windows
-1. Download the latest **TNFS Server Manager (Win).zip** from the Releases page
+1. Download the latest **TNFS Server Manager (Win).zip** from the [Releases page](https://github.com/nwah/tnfs-gui/releases)
 2. Unzip and place the **TNFS Server Manager** folder wherever you like (e.g. `C:\Program Files`)
 
 ### macOS
-1. Download the latest **TNFS Server Manager (Mac).zip** from the Releases page
+1. Download the latest **TNFS Server Manager (Mac).zip** from the [Releases page](https://github.com/nwah/tnfs-gui/releases)
 2. Unzip and move **TNFS Server Manager.app** wherever you like (e.g. `/Applications`)
 
 ## Usage
