@@ -1,50 +1,26 @@
 package main
 
 import (
-	"fyne.io/fyne"
-	"fyne.io/fyne/app"
-
-	"github.com/fujiNetWIFI/tnfs-gui/internal/server"
+	"fyne.io/fyne/v2"
+	"fyne.io/fyne/v2/app"
+	"github.com/fujiNetWIFI/tnfs-gui/internal/config"
+	"github.com/fujiNetWIFI/tnfs-gui/internal/tnfs"
 	"github.com/fujiNetWIFI/tnfs-gui/internal/ui"
-)
-
-const (
-	APP_ID             = "org.fujinet.tnfsd.gui"
-	VERSION            = "0.0.1"
-	TNFS_ROOT_PATH_KEY = "tnfsRootPath"
 )
 
 func main() {
 	icon, _ := fyne.LoadResourceFromPath("Icon.png")
-	a := app.NewWithID(APP_ID)
+	a := app.New()
 	a.SetIcon(icon)
 
-	err := ui.locateTnfsdExecutable()
+	cfg, err := config.LoadConfig()
 	if err != nil {
-		ui.showExeNotFound()
-		return
+		ui.ShowExeNotFound()
 	}
 
-	ui.loadDefaultRootPath()
+	events := make(chan tnfs.Event)
+	server := tnfs.NewServer(cfg, events)
 
-	subscribers = make(map[server.TnfsEventType][]func(server.TnfsEvent))
-	u := &ui.TnfsUi{}
-
-	u.server = ui.makeServerTab()
-	u.logs = ui.makeLogTab()
-	u.info = ui.makeInfoTab()
-	u.main = ui.makeMainWindow(u)
-
-	eventch := make(chan server.TnfsEvent)
-	ui.listenToServerEvents(eventch)
-
-	s := server.NewTnfsServer(eventch)
-	a.Lifecycle().SetOnStopped(func() {
-		s.killSubprocess()
-	})
-
-	go s.findExistingProcess()
-
-	u.main.ShowAndRun()
-	u.main.SetMaster()
+	u := ui.NewUI(cfg, server, events)
+	u.ShowMain()
 }

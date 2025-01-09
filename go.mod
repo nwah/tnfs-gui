@@ -1,4 +1,4 @@
-module tnfsd-gui
+module github.com/fujiNetWIFI/tnfs-gui
 
 go 1.23.3
 

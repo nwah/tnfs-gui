@@ -1,4 +1,4 @@
-package server
+package tnfs
 
 import (
 	"bufio"
@@ -12,45 +12,51 @@ import (
 	"syscall"
 	"time"
 
+	"fyne.io/fyne/v2"
+	"github.com/fujiNetWIFI/tnfs-gui/internal/config"
 	"github.com/mitchellh/go-ps"
 )
 
-type TnfsEventType string
+type EventType string
 
 const (
-	statusChange TnfsEventType = "status"
-	log          TnfsEventType = "log"
-	err          TnfsEventType = "err"
+	StatusChange EventType = "status"
+	Log          EventType = "log"
+	Err          EventType = "err"
 )
 
-type TnfsEvent struct {
-	Type TnfsEventType
+type Event struct {
+	Type EventType
 	Data string
 	Time time.Time
 }
 
-type TnfsdStatus int
+type Status int
 
 const (
-	STOPPED TnfsdStatus = iota
+	STOPPED Status = iota
 	STOPPING
 	STARTING
 	STARTED
 	FAILED
 )
 
-type TnfsServer struct {
-	Status  TnfsdStatus
+type Server struct {
+	Status  Status
 	Log     io.Reader
 	Process *os.Process
-	EventCh chan TnfsEvent
+	EventCh chan Event
 	Err     error
+
+	cfg *config.Config
 }
 
-func NewTnfsServer(ch chan TnfsEvent) *TnfsServer {
-	s := &TnfsServer{
+func NewServer(cfg *config.Config, ch chan Event) *Server {
+	a := fyne.CurrentApp()
+	s := &Server{
 		Status:  STOPPED,
 		EventCh: ch,
+		cfg:     cfg,
 	}
 
 	sigch := make(chan os.Signal, 1)
@@ -60,34 +66,40 @@ func NewTnfsServer(ch chan TnfsEvent) *TnfsServer {
 		s.killSubprocess()
 	}()
 
+	a.Lifecycle().SetOnStopped(func() {
+		s.killSubprocess()
+	})
+
+	go s.findExistingProcess()
+
 	return s
 }
 
-func (s *TnfsServer) fail(err error) error {
+func (s *Server) fail(err error) error {
 	defer s.setStatus(FAILED)
 	s.Err = err
 	return err
 }
 
-func (s *TnfsServer) setStatus(status TnfsdStatus) {
+func (s *Server) setStatus(status Status) {
 	s.Status = status
-	s.sendEvent(statusChange)
+	s.sendEvent(StatusChange)
 }
 
-func (s *TnfsServer) sendEvent(t TnfsEventType) {
-	e := TnfsEvent{Type: t, Time: time.Now()}
+func (s *Server) sendEvent(t EventType) {
+	e := Event{Type: t, Time: time.Now()}
 	if s.EventCh != nil {
 		s.EventCh <- e
 	}
 }
 
-func (s *TnfsServer) sendLogEvent(msg string) {
-	e := TnfsEvent{Type: log, Data: msg, Time: time.Now()}
+func (s *Server) sendLogEvent(msg string) {
+	e := Event{Type: Log, Data: msg, Time: time.Now()}
 	s.EventCh <- e
 }
 
-func (s *TnfsServer) launchSubprocess(exePath, tnfsRootPath string) error {
-	cmd := exec.Command(exePath, tnfsRootPath)
+func (s *Server) launchSubprocess() error {
+	cmd := exec.Command(s.cfg.ExePath, s.cfg.TnfsRootPath)
 
 	errR, _ := cmd.StderrPipe()
 	outR, _ := cmd.StdoutPipe()
@@ -112,7 +124,7 @@ func (s *TnfsServer) launchSubprocess(exePath, tnfsRootPath string) error {
 	return nil
 }
 
-func (s *TnfsServer) killSubprocess() error {
+func (s *Server) killSubprocess() error {
 	if s.Process == nil {
 		return errors.New("Not started")
 	}
@@ -126,7 +138,7 @@ func (s *TnfsServer) killSubprocess() error {
 	return nil
 }
 
-func (s *TnfsServer) findExistingProcess() *os.Process {
+func (s *Server) findExistingProcess() *os.Process {
 	all, err := ps.Processes()
 	if err != nil {
 		return nil
@@ -149,7 +161,7 @@ func (s *TnfsServer) findExistingProcess() *os.Process {
 	return nil
 }
 
-func (s *TnfsServer) Start() error {
+func (s *Server) Start() error {
 	existing := s.findExistingProcess()
 	if existing != nil {
 		return nil
@@ -157,7 +169,7 @@ func (s *TnfsServer) Start() error {
 
 	s.setStatus(STARTING)
 
-	err := s.launchSubprocess(exePath, tnfsRootPath)
+	err := s.launchSubprocess()
 	if err != nil {
 		return s.fail(err)
 	}
@@ -174,7 +186,7 @@ func (s *TnfsServer) Start() error {
 	return nil
 }
 
-func (s *TnfsServer) Stop() error {
+func (s *Server) Stop() error {
 	if s.Status != STARTED {
 		return errors.New("Not running")
 	}

@@ -1,0 +1,8 @@
+Website = "https://fujinet.online"
+
+[Details]
+  Icon = "Icon.png"
+  Name = "TNFS Server Manager"
+  ID = "org.fujinet.tnfs-ui"
+  Version = "0.0.1"
+  Build = 12
