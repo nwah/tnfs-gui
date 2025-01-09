@@ -36,6 +36,9 @@ func (ui *UI) Listen(eventch chan tnfs.Event) {
 }
 
 func (ui *UI) ShowMain() {
+	if ui.cfg.AllowBackground {
+		HideFromDock()
+	}
 	ui.MainWindow.ShowAndRun()
 	ui.MainWindow.SetMaster()
 }

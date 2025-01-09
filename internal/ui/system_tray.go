@@ -1,3 +1,5 @@
+//go:generate fyne bundle --pkg ui -o bundled.go ../../assets/TrayIcon.svg
+
 package ui
 
 import (
@@ -8,11 +10,7 @@ import (
 )
 
 func loadSystemTrayIcon() *theme.ThemedResource {
-	icon, err := fyne.LoadResourceFromPath("assets/TrayIcon.svg")
-	if err != nil {
-		icon = theme.MediaRecordIcon()
-	}
-	return theme.NewThemedResource(icon)
+	return theme.NewThemedResource(resourceTrayIconSvg)
 }
 
 func makeSystemMenu(ui *UI, server *tnfs.Server) *fyne.Menu {

@@ -7,11 +7,16 @@ import (
 )
 
 func makeOptionsTab(ui *UI) *fyne.Container {
-	allowBackgroundCheck := widget.NewCheck("Allow TNFS server to keep running in background", func(checked bool) {
+	allowBackgroundCheck := widget.NewCheck("Run in background", func(checked bool) {
 		ui.cfg.SetAllowBackground(checked)
+		if checked {
+			HideFromDock()
+		} else {
+			ShowInDock()
+		}
 	})
 	startAtLoginCheck := widget.NewCheck("Start automatically at login", func(checked bool) {
-		ui.cfg.SetAllowBackground(checked)
+		ui.cfg.SetStartAtLogin(checked)
 	})
 	allowBackgroundCheck.SetChecked(ui.cfg.AllowBackground)
 	startAtLoginCheck.SetChecked(ui.cfg.StartAtLogin)
