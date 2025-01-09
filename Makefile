@@ -1,8 +1,12 @@
-.PHONY: clean
+.PHONY: clean tagversion
 
 NAME := TNFS Server Manager
+VERSION := $(shell cat FyneApp.toml | sed -n '/Version *=* */{s///;s/^ *"//;s/"$$//;p;}')
 
 all: clean macos windows linux
+
+tagversion:
+	git tag -a $(VERSION) -m "Version $(VERSION)"
 
 clean:
 	rm -f ./tnfsd/src/*.o
