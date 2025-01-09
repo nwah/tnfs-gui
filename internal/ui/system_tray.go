@@ -7,6 +7,14 @@ import (
 	"github.com/fujiNetWIFI/tnfs-gui/internal/tnfs"
 )
 
+func loadSystemTrayIcon() *theme.ThemedResource {
+	icon, err := fyne.LoadResourceFromPath("assets/TrayIcon.svg")
+	if err != nil {
+		icon = theme.MediaRecordIcon()
+	}
+	return theme.NewThemedResource(icon)
+}
+
 func makeSystemMenu(ui *UI, server *tnfs.Server) *fyne.Menu {
 	a := fyne.CurrentApp()
 	desk, ok := a.(desktop.App)
@@ -46,7 +54,8 @@ func makeSystemMenu(ui *UI, server *tnfs.Server) *fyne.Menu {
 		m.Refresh()
 	})
 
-	desk.SetSystemTrayIcon(theme.MediaRecordIcon())
+	icon := loadSystemTrayIcon()
+	desk.SetSystemTrayIcon(icon)
 	desk.SetSystemTrayMenu(m)
 
 	return m

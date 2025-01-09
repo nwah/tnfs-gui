@@ -1,7 +1,7 @@
 Website = "https://fujinet.online"
 
 [Details]
-  Icon = "Icon.png"
+  Icon = "assets/Icon.png"
   Name = "TNFS Server Manager"
   ID = "org.fujinet.tnfs-ui"
   Version = "0.0.2"
