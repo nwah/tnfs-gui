@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"net"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -17,6 +18,7 @@ const (
 type Config struct {
 	ExePath      string
 	TnfsRootPath string
+	Hostname     string
 }
 
 func (c *Config) UpdateRootPath(newPath string) {
@@ -27,13 +29,35 @@ func (c *Config) UpdateRootPath(newPath string) {
 }
 
 func LoadConfig() (*Config, error) {
-	rootPath := loadDefaultRootPath()
 	exePath, err := locateTnfsdExecutable()
 	if err != nil {
 		return &Config{}, err
 	}
-	cfg := &Config{ExePath: exePath, TnfsRootPath: rootPath}
+	cfg := &Config{
+		ExePath:      exePath,
+		TnfsRootPath: loadDefaultRootPath(),
+		Hostname:     getHostnameOrIP(),
+	}
 	return cfg, nil
+}
+
+func getHostnameOrIP() string {
+	host, err := os.Hostname()
+	if err == nil && host != "" {
+		return host
+	}
+	addrs, err := net.InterfaceAddrs()
+	if err != nil {
+		return ""
+	}
+	for _, addr := range addrs {
+		if ipnet, ok := addr.(*net.IPNet); ok && !ipnet.IP.IsLoopback() {
+			if ipnet.IP.To4() != nil {
+				return ipnet.IP.String()
+			}
+		}
+	}
+	return ""
 }
 
 func locateTnfsdExecutable() (string, error) {

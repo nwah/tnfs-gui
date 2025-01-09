@@ -74,7 +74,7 @@ func makeServerTab(ui *UI, server *tnfs.Server) *fyne.Container {
 
 			startButton.Disable()
 		case tnfs.STARTED:
-			msg = "Running"
+			msg = "Running on " + ui.cfg.Hostname
 			icon = theme.NewColoredResource(theme.MediaRecordIcon(), theme.ColorNameSuccess)
 
 			startButton.Hide()
