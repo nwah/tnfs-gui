@@ -1,6 +1,8 @@
 package main
 
 import (
+	"os"
+
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
 	"github.com/fujiNetWIFI/tnfs-gui/internal/config"
@@ -22,5 +24,16 @@ func main() {
 	server := tnfs.NewServer(cfg, events)
 
 	u := ui.NewUI(cfg, server, events)
-	u.ShowMain()
+
+	if len(os.Args) > 1 && os.Args[1] == "autorun" {
+		go server.Start()
+		if cfg.AllowBackground {
+			ui.HideFromDock()
+			a.Run()
+		} else {
+			u.ShowMain()
+		}
+	} else {
+		u.ShowMain()
+	}
 }

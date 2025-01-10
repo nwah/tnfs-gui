@@ -41,7 +41,7 @@ func makeServerTab(ui *UI, server *tnfs.Server) *fyne.Container {
 	})
 	stopButton.Hide()
 
-	ui.On(tnfs.StatusChange, func(e tnfs.Event) {
+	updateStatus := func() {
 		var msg string
 		var icon fyne.Resource
 
@@ -53,6 +53,7 @@ func makeServerTab(ui *UI, server *tnfs.Server) *fyne.Container {
 			stopButton.Hide()
 			startButton.Show()
 			startButton.Enable()
+			dirPickerButton.Enable()
 		case tnfs.FAILED:
 			msg = "Error"
 			icon = theme.NewColoredResource(theme.WarningIcon(), theme.ColorNameWarning)
@@ -63,16 +64,19 @@ func makeServerTab(ui *UI, server *tnfs.Server) *fyne.Container {
 			stopButton.Hide()
 			startButton.Show()
 			startButton.Enable()
+			dirPickerButton.Enable()
 		case tnfs.STOPPING:
 			msg = "Stopping..."
 			icon = theme.NewColoredResource(theme.MediaRecordIcon(), theme.ColorNameWarning)
 
 			stopButton.Disable()
+			dirPickerButton.Disable()
 		case tnfs.STARTING:
 			msg = "Starting..."
 			icon = theme.NewColoredResource(theme.MediaRecordIcon(), theme.ColorNameWarning)
 
 			startButton.Disable()
+			dirPickerButton.Disable()
 		case tnfs.STARTED:
 			msg = "Running on " + ui.cfg.Hostname
 			icon = theme.NewColoredResource(theme.MediaRecordIcon(), theme.ColorNameSuccess)
@@ -80,10 +84,16 @@ func makeServerTab(ui *UI, server *tnfs.Server) *fyne.Container {
 			startButton.Hide()
 			stopButton.Show()
 			stopButton.Enable()
+			dirPickerButton.Disable()
 		}
 		statusText.SetText(msg)
 		statusIcon.SetResource(icon)
+	}
+
+	ui.On(tnfs.StatusChange, func(_ tnfs.Event) {
+		updateStatus()
 	})
+	updateStatus()
 
 	return container.NewVBox(
 		dirPickerLabel,

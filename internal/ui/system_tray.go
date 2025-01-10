@@ -29,8 +29,11 @@ func makeSystemMenu(ui *UI, server *tnfs.Server) *fyne.Menu {
 	})
 
 	m := fyne.NewMenu("TNFS Server Manager",
-		fyne.NewMenuItem("Show TNFS Server Manager", func() {
+		fyne.NewMenuItem("Open TNFS Server Manager", func() {
 			ui.MainWindow.Show()
+			if ui.cfg.AllowBackground {
+				ShowInDock()
+			}
 		}),
 		fyne.NewMenuItemSeparator(),
 		startStop,

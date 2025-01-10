@@ -36,9 +36,6 @@ func (ui *UI) Listen(eventch chan tnfs.Event) {
 }
 
 func (ui *UI) ShowMain() {
-	if ui.cfg.AllowBackground {
-		HideFromDock()
-	}
 	ui.MainWindow.ShowAndRun()
 	ui.MainWindow.SetMaster()
 }
@@ -81,6 +78,7 @@ func makeMainWindow(ui *UI) fyne.Window {
 	w.SetCloseIntercept(func() {
 		if ui.cfg.AllowBackground {
 			w.Hide()
+			HideFromDock()
 		} else {
 			w.Close()
 			a.Quit()

@@ -4,5 +4,5 @@ Website = "https://fujinet.online"
   Icon = "assets/Icon.png"
   Name = "TNFS Server Manager"
   ID = "org.fujinet.tnfs-ui"
-  Version = "0.0.2"
-  Build = 23
+  Version = "0.0.3"
+  Build = 33

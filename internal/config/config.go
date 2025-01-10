@@ -9,12 +9,12 @@ import (
 	"runtime"
 
 	"fyne.io/fyne/v2"
+	"github.com/emersion/go-autostart"
 )
 
 const (
 	TNFS_ROOT_PATH_KEY   = "tnfsRootPath"
 	ALLOW_BACKGROUND_KEY = "allowBackground"
-	START_AT_LOGIN_KEY   = "startAtLogin"
 )
 
 type Config struct {
@@ -23,6 +23,7 @@ type Config struct {
 	Hostname        string
 	AllowBackground bool
 	StartAtLogin    bool
+	autostartApp    *autostart.App
 }
 
 func (c *Config) SetRootPath(newPath string) {
@@ -35,9 +36,16 @@ func (c *Config) SetAllowBackground(newVal bool) {
 	fyne.CurrentApp().Preferences().SetBool(ALLOW_BACKGROUND_KEY, newVal)
 }
 
-func (c *Config) SetStartAtLogin(newVal bool) {
-	c.StartAtLogin = newVal
-	fyne.CurrentApp().Preferences().SetBool(START_AT_LOGIN_KEY, newVal)
+func (c *Config) SetStartAtLogin(enable bool) {
+	var err error
+	if enable {
+		err = c.autostartApp.Enable()
+	} else {
+		err = c.autostartApp.Disable()
+	}
+	if err == nil {
+		c.StartAtLogin = enable
+	}
 }
 
 func LoadConfig() (*Config, error) {
@@ -47,12 +55,16 @@ func LoadConfig() (*Config, error) {
 	}
 
 	prefs := fyne.CurrentApp().Preferences()
+	autostartApp, _ := makeAutostartApp()
+
 	cfg := &Config{
 		ExePath:         exePath,
 		Hostname:        getHostnameOrIP(),
 		TnfsRootPath:    getRootPath(prefs),
 		AllowBackground: prefs.BoolWithFallback(ALLOW_BACKGROUND_KEY, false),
-		StartAtLogin:    prefs.BoolWithFallback(START_AT_LOGIN_KEY, false),
+		StartAtLogin:    autostartApp.IsEnabled(),
+
+		autostartApp: autostartApp,
 	}
 	return cfg, nil
 }
@@ -89,7 +101,6 @@ func locateTnfsdExecutable() (string, error) {
 	}
 
 	exePath := filepath.Join(dir, exeName)
-	exePath = "bin/tnfsd-bsd"
 
 	fmt.Println(currentExePath)
 	fmt.Println(exePath)
@@ -108,4 +119,18 @@ func getRootPath(prefs fyne.Preferences) string {
 		dirname = "."
 	}
 	return prefs.StringWithFallback(TNFS_ROOT_PATH_KEY, dirname)
+}
+
+func makeAutostartApp() (*autostart.App, error) {
+	a := fyne.CurrentApp()
+	currentExePath, err := os.Executable()
+	if err != nil {
+		return nil, err
+	}
+	aa := &autostart.App{
+		Name:        a.Metadata().ID,
+		DisplayName: a.Metadata().Name,
+		Exec:        []string{currentExePath, "autorun"},
+	}
+	return aa, nil
 }
