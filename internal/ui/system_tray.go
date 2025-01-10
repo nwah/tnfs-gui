@@ -10,7 +10,7 @@ import (
 )
 
 func loadSystemTrayIcon() *theme.ThemedResource {
-	return theme.NewThemedResource(resourceTrayIconSvg)
+	return theme.NewThemedResource(resourceTrayIconPng)
 }
 
 func makeSystemMenu(ui *UI, server *tnfs.Server) *fyne.Menu {
