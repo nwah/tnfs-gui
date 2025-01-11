@@ -21,7 +21,7 @@ endif
 	fyne-cross darwin -arch=amd64
 	mkdir -p ./dist/macos
 	mv "./fyne-cross/dist/darwin-amd64/$(NAME).app" ./dist/macos/
-	cp tnfsd/bin/tnfsd-bsd "dist/macos/$(NAME).app/Contents/MacOS/tnfsd"
+	cp bin/tnfsd-bsd "dist/macos/$(NAME).app/Contents/MacOS/tnfsd"
 	cd dist/macos && zip -r "$(NAME) (macOS).zip" "$(NAME).app"
 
 windows:
@@ -32,7 +32,7 @@ endif
 	fyne-cross windows -arch=amd64
 	mkdir -p "./dist/windows/$(NAME)"
 	unzip "./fyne-cross/dist/windows-amd64/$(NAME).exe.zip" -d "./dist/windows/$(NAME)/"
-	cp tnfsd/bin/tnfsd.exe "./dist/windows/$(NAME)"
+	cp bin/tnfsd.exe "./dist/windows/$(NAME)"
 	cd dist/windows && zip -r "$(NAME) (Windows).zip" "$(NAME)"
 
 # linux:
