@@ -2,18 +2,12 @@ package tnfs
 
 import (
 	"bufio"
-	"errors"
-	"fmt"
 	"io"
 	"os"
-	"os/signal"
-	"strings"
-	"syscall"
 	"time"
 
-	"fyne.io/fyne/v2"
 	"github.com/fujiNetWIFI/tnfs-gui/internal/config"
-	"github.com/mitchellh/go-ps"
+	"github.com/nwah/gotnfsd"
 )
 
 type EventType string
@@ -22,6 +16,8 @@ const (
 	StatusChange EventType = "status"
 	Log          EventType = "log"
 	Err          EventType = "err"
+
+	DEFAULT_PORT = 16384
 )
 
 type Event struct {
@@ -51,25 +47,23 @@ type Server struct {
 }
 
 func NewServer(cfg *config.Config, ch chan Event) *Server {
-	a := fyne.CurrentApp()
 	s := &Server{
 		Status:  STOPPED,
 		EventCh: ch,
 		cfg:     cfg,
 	}
 
-	sigch := make(chan os.Signal, 1)
-	signal.Notify(sigch, syscall.SIGTERM, syscall.SIGINT)
+	r, w, _ := os.Pipe()
+
 	go func() {
-		<-sigch
-		s.killSubprocess()
+		scanner := bufio.NewScanner(r)
+		scanner.Split(bufio.ScanBytes)
+		for scanner.Scan() {
+			s.sendLogEvent(scanner.Text())
+		}
 	}()
 
-	a.Lifecycle().SetOnStopped(func() {
-		s.killSubprocess()
-	})
-
-	go s.findExistingProcess()
+	gotnfsd.Init(w)
 
 	return s
 }
@@ -97,66 +91,35 @@ func (s *Server) sendLogEvent(msg string) {
 	s.EventCh <- e
 }
 
-func (s *Server) findExistingProcess() *os.Process {
-	all, err := ps.Processes()
-	if err != nil {
-		return nil
-	}
-	for _, pp := range all {
-		name := pp.Executable()
-		if strings.HasSuffix(name, "tnfsd") || strings.HasSuffix(name, "tnfsd.exe") {
-			p, _ := os.FindProcess(pp.Pid())
-			if p == nil {
-				continue
-			}
-			err := p.Signal(syscall.Signal(0))
-			if err == nil {
-				s.Process = p
-				s.setStatus(STARTED)
-				return p
-			}
-		}
-	}
-	return nil
-}
-
-func (s *Server) Start() error {
-	existing := s.findExistingProcess()
-	if existing != nil {
-		return nil
-	}
-
-	s.setStatus(STARTING)
-
-	err := s.launchSubprocess()
-	if err != nil {
-		return s.fail(err)
-	}
-
-	s.setStatus(STARTED)
+func (s *Server) captureStderr() {
+	r, w, _ := os.Pipe()
+	os.Stderr = w
 
 	go func() {
-		scanner := bufio.NewScanner(s.Log)
+		scanner := bufio.NewScanner(r)
 		for scanner.Scan() {
 			s.sendLogEvent(scanner.Text())
 		}
 	}()
-
-	return nil
 }
 
-func (s *Server) Stop() error {
+func (s *Server) Start() {
+	s.setStatus(STARTED)
+
+	// s.captureStderr()
+
+	go func() {
+		err := gotnfsd.Start(s.cfg.TnfsRootPath, DEFAULT_PORT, false)
+		if err != nil {
+			s.fail(err)
+		}
+	}()
+}
+
+func (s *Server) Stop() {
 	if s.Status != STARTED {
-		return errors.New("Not running")
+		return
 	}
-
-	s.setStatus(STOPPING)
-	err := s.killSubprocess()
-
-	if err != nil {
-		fmt.Println(err.Error())
-	}
-
+	gotnfsd.Stop()
 	s.setStatus(STOPPED)
-	return err
 }
