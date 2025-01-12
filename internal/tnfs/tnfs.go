@@ -3,7 +3,9 @@ package tnfs
 import (
 	"bufio"
 	"io"
+	"log"
 	"os"
+	"runtime"
 	"time"
 
 	"github.com/fujiNetWIFI/tnfs-gui/internal/config"
@@ -43,7 +45,8 @@ type Server struct {
 	EventCh chan Event
 	Err     error
 
-	cfg *config.Config
+	cfg    *config.Config
+	pinner *runtime.Pinner
 }
 
 func NewServer(cfg *config.Config, ch chan Event) *Server {
@@ -51,15 +54,20 @@ func NewServer(cfg *config.Config, ch chan Event) *Server {
 		Status:  STOPPED,
 		EventCh: ch,
 		cfg:     cfg,
+		pinner:  new(runtime.Pinner),
 	}
 
 	r, w, _ := os.Pipe()
+	s.pinner.Pin(w)
 
 	go func() {
-		scanner := bufio.NewScanner(r)
-		scanner.Split(bufio.ScanBytes)
-		for scanner.Scan() {
-			s.sendLogEvent(scanner.Text())
+		buf := bufio.NewReader(r)
+		for {
+			line, _, err := buf.ReadLine()
+			if err != nil {
+				log.Fatal(err.Error())
+			}
+			s.sendLogEvent(string(line))
 		}
 	}()
 
