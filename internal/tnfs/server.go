@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/fujiNetWIFI/tnfs-gui/internal/config"
-	"github.com/nwah/gotnfsd"
 )
 
 type EventType string
@@ -71,7 +70,7 @@ func NewServer(cfg *config.Config, ch chan Event) *Server {
 		}
 	}()
 
-	gotnfsd.Init(w)
+	TnfsdInit(w)
 
 	return s
 }
@@ -117,7 +116,7 @@ func (s *Server) Start() {
 	// s.captureStderr()
 
 	go func() {
-		err := gotnfsd.Start(s.cfg.TnfsRootPath, DEFAULT_PORT, false)
+		err := TnfsdStart(s.cfg.TnfsRootPath, DEFAULT_PORT, false)
 		if err != nil {
 			s.fail(err)
 		}
@@ -128,6 +127,6 @@ func (s *Server) Stop() {
 	if s.Status != STARTED {
 		return
 	}
-	gotnfsd.Stop()
+	TnfsdStop()
 	s.setStatus(STOPPED)
 }

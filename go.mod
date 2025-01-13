@@ -5,11 +5,8 @@ go 1.23.3
 require (
 	fyne.io/fyne/v2 v2.5.3
 	github.com/emersion/go-autostart v0.0.0-20210130080809-00ed301c8e9a
-	github.com/nwah/gotnfsd v0.0.1
 	github.com/sqweek/dialog v0.0.0-20240226140203-065105509627
 )
-
-replace github.com/nwah/gotnfsd => ../tnfsd/src
 
 require (
 	fyne.io/systray v1.11.0 // indirect
