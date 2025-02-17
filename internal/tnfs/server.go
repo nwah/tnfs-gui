@@ -116,7 +116,7 @@ func (s *Server) Start() {
 	// s.captureStderr()
 
 	go func() {
-		err := TnfsdStart(s.cfg.TnfsRootPath, DEFAULT_PORT, false)
+		err := TnfsdStart(s.cfg.TnfsRootPath, DEFAULT_PORT, s.cfg.ReadOnly)
 		if err != nil {
 			s.fail(err)
 		}

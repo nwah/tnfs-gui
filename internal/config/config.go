@@ -10,11 +10,13 @@ import (
 
 const (
 	TNFS_ROOT_PATH_KEY   = "tnfsRootPath"
+	READ_ONLY_KEY        = "readonly"
 	ALLOW_BACKGROUND_KEY = "allowBackground"
 )
 
 type Config struct {
 	TnfsRootPath    string
+	ReadOnly        bool
 	Hostname        string
 	AllowBackground bool
 	StartAtLogin    bool
@@ -24,6 +26,11 @@ type Config struct {
 func (c *Config) SetRootPath(newPath string) {
 	c.TnfsRootPath = newPath
 	fyne.CurrentApp().Preferences().SetString(TNFS_ROOT_PATH_KEY, newPath)
+}
+
+func (c *Config) SetReadOnly(readonly bool) {
+	c.ReadOnly = readonly
+	fyne.CurrentApp().Preferences().SetBool(READ_ONLY_KEY, readonly)
 }
 
 func (c *Config) SetAllowBackground(newVal bool) {
@@ -50,6 +57,7 @@ func LoadConfig() (*Config, error) {
 	cfg := &Config{
 		Hostname:        getHostnameOrIP(),
 		TnfsRootPath:    getRootPath(prefs),
+		ReadOnly:        prefs.BoolWithFallback(READ_ONLY_KEY, false),
 		AllowBackground: prefs.BoolWithFallback(ALLOW_BACKGROUND_KEY, false),
 		StartAtLogin:    autostartApp.IsEnabled(),
 
